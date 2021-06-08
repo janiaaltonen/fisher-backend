@@ -5,12 +5,20 @@ import json
 from .utils import parse_request_payload
 
 
-class Event(View):
+class FullEvent(View):
+
     def get(self, request):
-        foo = {"mitä": "kuuluu"}
         fe = FishingEvent()
-        fishin_event = fe.get_full_event(1)
-        return HttpResponse(json.dumps(fishin_event), content_type='application/json')
+        fishing_event = fe.get_full_event(1)
+        return HttpResponse(json.dumps(fishing_event), content_type='application/json')
+
+
+class AllEvents(View):
+
+    def get(self, request):
+        fe = FishingEvent()
+        events = fe.get_all_events_and_catches()
+        return HttpResponse(json.dumps(events), content_type='application/json')
 
 
 class CreateEvent(View):

@@ -9,11 +9,11 @@ class FishingEvent(models.Model):
     location_details = models.TextField(blank=True)
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
-    air_temp = models.IntegerField(blank=True)
-    water_temp = models.IntegerField(blank=True)
-    persons = models.IntegerField(blank=True)
+    air_temp = models.IntegerField(blank=True, null=True)
+    water_temp = models.IntegerField(blank=True, null=True)
+    persons = models.IntegerField(blank=True, null=True)
     weather = models.CharField(max_length=200, blank=True)
-    wind = models.IntegerField(blank=True)
+    wind = models.IntegerField(blank=True, null=True)
 
     def get_event_by_pk(self, pk):
         query_set = FishingEvent.objects.filter(pk=pk)
@@ -28,17 +28,42 @@ class FishingEvent(models.Model):
 
         return fishing_event
 
+    def get_all_events_and_catches(self):
+        query_set = FishingEvent.objects.all()
+        # order those events by date starting from latest date added
+        ordered_set = query_set.order_by('-date')
+        dict_data_raw = json.loads(serializers.serialize('json', ordered_set))
+        ids = [obj['pk'] for obj in dict_data_raw]
+        fc = FishCatch()
+        fish_catches = fc.get_catches_by_event(ids)
+        parsed_events = []
+        for obj in dict_data_raw:
+            catches = []
+            for catch_obj in fish_catches:
+                if obj['pk'] == catch_obj['fishing_event']:
+                    catches.append(catch_obj)
+                    
+            obj['fields']['catches'] = catches
+            obj['fields']['id'] = obj['pk']
+            parsed_events.append(obj['fields'])
+
+        return parsed_events
+
     def get_all_events_and_catches_count(self):
         query_set = FishingEvent.objects.raw('SELECT fishing_events_fishingevent.*, COUNT(fishing_events_fishcatch.fishing_event_id) AS fish_count '
                                              'FROM fishing_events_fishingevent '
                                              'LEFT JOIN fishing_events_fishcatch '
                                              'ON (fishing_events_fishingevent.id = fishing_events_fishcatch.fishing_event_id) '
                                              'GROUP BY fishing_events_fishingevent.id')
+        # Serializing will exclude fish_count field because it's not part of FishingEvent object
         dict_data_raw = json.loads(serializers.serialize('json', query_set))
         parsed_data = []
-        for obj in dict_data_raw:
-            obj['field']['id'] = obj['pk']
-            parsed_data.append(obj)
+        for i, obj in enumerate(dict_data_raw):
+            # this looks bit hacky but go with it until time to find better solution
+            # add fish_count to parsed object
+            obj['fields']['fish_count'] = query_set[i].fish_count
+            obj['fields']['id'] = obj['pk']
+            parsed_data.append(obj['fields'])
 
         return parsed_data
 
@@ -55,15 +80,24 @@ class FishingEvent(models.Model):
 class FishCatch(models.Model):
     fishing_event = models.ForeignKey(FishingEvent, related_name='fishing_event', on_delete=models.CASCADE)
     fish_species = models.CharField(max_length=100)
-    weight = models.FloatField(blank=True)
-    length = models.IntegerField(blank=True)
+    weight = models.FloatField(blank=True, null=True)
+    length = models.IntegerField(blank=True, null=True)
     fishing_technique = models.CharField(max_length=100, blank=True)
     fishing_technique_details = models.TextField(blank=True)
     lure = models.CharField(max_length=100, blank=True)
     lure_details = models.TextField(blank=True)
 
     def get_catches_by_event(self, pk):
-        query_set = FishCatch.objects.filter(pk=pk)
+        """
+        if using integer, it will query only one event
+        Else queries using IN clause
+        :param pk: either integer or list of integers
+        :return: list of fish catches in dict
+        """
+        if isinstance(pk, int):
+            query_set = FishCatch.objects.filter(fishing_event_id=pk)
+        else:
+            query_set = FishCatch.objects.filter(fishing_event_id__in=pk)
         dict_data = json.loads(serializers.serialize('json', query_set))
         catches = []
         for obj in dict_data:

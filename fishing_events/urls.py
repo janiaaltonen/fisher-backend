@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import Event, CreateEvent, Fish, Weather, FishingTechniques, Lures
+from .views import FullEvent, AllEvents, CreateEvent, Fish, Weather, FishingTechniques, Lures
 
 urlpatterns = [
-    path('', Event.as_view()),
+    path('fullEvent', FullEvent.as_view()),
+    path('allEvents', AllEvents.as_view()),
     path('createFishingEvent', CreateEvent.as_view()),
     path('fishSpecies', Fish.as_view()),
     path('weatherOptions', Weather.as_view()),
