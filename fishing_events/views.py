@@ -37,6 +37,13 @@ class CreateEvent(View):
 
         return HttpResponse(json.dumps({'message': 'ok'}), status=201, content_type='application/json')
 
+class DeleteEvent(View):
+
+    def delete(self, request):
+        print(request.body)
+
+        return HttpResponse(json.dumps({'message': 'ok'}), status=200, content_type='application/json')
+
 
 class Fish(View):
 

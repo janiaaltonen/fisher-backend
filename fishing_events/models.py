@@ -42,7 +42,7 @@ class FishingEvent(models.Model):
             for catch_obj in fish_catches:
                 if obj['pk'] == catch_obj['fishing_event']:
                     catches.append(catch_obj)
-                    
+
             obj['fields']['catches'] = catches
             obj['fields']['id'] = obj['pk']
             parsed_events.append(obj['fields'])
@@ -76,6 +76,8 @@ class FishingEvent(models.Model):
         obj_id = getattr(fe, 'pk')
         return obj_id
 
+    def delete_event(self, pk):
+        return
 
 class FishCatch(models.Model):
     fishing_event = models.ForeignKey(FishingEvent, related_name='fishing_event', on_delete=models.CASCADE)
