@@ -77,7 +77,8 @@ class FishingEvent(models.Model):
         return obj_id
 
     def delete_event(self, pk):
-        return
+        r = FishingEvent.objects.filter(pk=pk).delete()
+        return r
 
 class FishCatch(models.Model):
     fishing_event = models.ForeignKey(FishingEvent, related_name='fishing_event', on_delete=models.CASCADE)

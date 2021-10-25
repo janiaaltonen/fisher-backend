@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from .models import FishingEvent, FishingTechnique, FishCatch, FishSpecies, WeatherOption, Lure
 import json
 from .utils import parse_request_payload
+from datetime import datetime
 
 
 class FullEvent(View):
@@ -18,6 +19,8 @@ class AllEvents(View):
     def get(self, request):
         fe = FishingEvent()
         events = fe.get_all_events_and_catches()
+        for e in events:
+            e["date"] = datetime.strptime(e["date"], '%Y-%m-%d').strftime('%d.%m.%Y')
         return HttpResponse(json.dumps(events), content_type='application/json')
 
 
@@ -39,9 +42,9 @@ class CreateEvent(View):
 
 class DeleteEvent(View):
 
-    def delete(self, request):
-        print(request.body)
-
+    def delete(self, request, _id):
+        fe = FishingEvent()
+        a = fe.delete_event(_id)
         return HttpResponse(json.dumps({'message': 'ok'}), status=200, content_type='application/json')
 
 

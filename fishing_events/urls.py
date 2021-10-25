@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FullEvent, AllEvents, CreateEvent, Fish, Weather, FishingTechniques, Lures
+from .views import FullEvent, AllEvents, CreateEvent, Fish, Weather, FishingTechniques, Lures, DeleteEvent
 
 urlpatterns = [
     path('fullEvent', FullEvent.as_view()),
@@ -8,5 +8,6 @@ urlpatterns = [
     path('fishSpecies', Fish.as_view()),
     path('weatherOptions', Weather.as_view()),
     path('lureOptions', Lures.as_view()),
-    path('fishingTechniqueOptions', FishingTechniques.as_view())
+    path('fishingTechniqueOptions', FishingTechniques.as_view()),
+    path('deleteEvent/<int:_id>', DeleteEvent.as_view())
 ]
